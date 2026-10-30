@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dossier médical décentralisé</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-role="visitor">
+
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z" fill="#fff"/></svg>
+      <div><b>Dossier médical</b><small>décentralisé, sur Ethereum</small></div>
+    </div>
+    <div class="top-right">
+      <span id="net" class="pill">Réseau inconnu</span>
+      <span id="me" class="pill me hidden"></span>
+      <button id="connect" class="btn small">Connecter MetaMask</button>
+    </div>
+  </header>
+
+  <div id="wrongNet" class="alert hidden">
+    <span>MetaMask n'est pas sur Sepolia pour ce site.</span>
+    <button id="switchNet" class="btn small danger">Passer sur Sepolia</button>
+  </div>
+
+  <section class="banner">
+    <div class="banner-in">
+      <h1 id="roleTitle">Bienvenue</h1>
+      <p id="roleDesc">Connectez MetaMask. L'écran s'adapte au compte choisi : administrateur, médecin, laboratoire ou patient.</p>
+      <div id="who" class="who hidden"><code id="addrFull"></code><button id="copy">Copier</button></div>
+    </div>
+  </section>
+
+  <main class="wrap">
+
+    <!-- ===== Visiteur (pas encore connecté) ===== -->
+    <section class="card" data-view="visitor">
+      <h2>Quatre rôles, quatre écrans</h2>
+      <p class="lead">Changez de compte dans MetaMask : la page change toute seule.</p>
+      <div class="roles">
+        <div class="role-tile" style="border-color:#3d3a8f"><h3>Administrateur</h3><p>Déclare qui est médecin ou laboratoire.</p></div>
+        <div class="role-tile" style="border-color:#0b5cad"><h3>Médecin</h3><p>Ajoute consultations et analyses, si le patient l'autorise.</p></div>
+        <div class="role-tile" style="border-color:#8c4a07"><h3>Laboratoire</h3><p>Dépose des résultats d'analyses.</p></div>
+        <div class="role-tile" style="border-color:#0e7c66"><h3>Patient</h3><p>Autorise ou retire l'accès à son dossier.</p></div>
+      </div>
+    </section>
+
+    <!-- ===== Administrateur ===== -->
+    <div class="cols" data-view="admin">
+      <section class="card accent">
+        <h2>Enregistrer un prestataire</h2>
+        <p class="lead">Seul l'administrateur peut déclarer un médecin ou un laboratoire.</p>
+        <label class="field"><span>Adresse du compte</span>
+          <input type="text" id="provAddr" placeholder="0x…" autocomplete="off" spellcheck="false" /></label>
+        <div class="field" style="margin-bottom:16px">
+          <div class="seg">
+            <input type="radio" name="provRole" id="roleDoc" value="1" checked /><label for="roleDoc">Médecin</label>
+            <input type="radio" name="provRole" id="roleLab" value="2" /><label for="roleLab">Laboratoire</label>
+          </div>
+        </div>
+        <button id="regProv" class="btn wide">Enregistrer le prestataire</button>
+      </section>
+      <section class="card">
+        <h2>Prestataires enregistrés</h2>
+        <p class="lead">Lus sur la blockchain.</p>
+        <ul id="provList" class="list"></ul>
+      </section>
+    </div>
+
+    <!-- ===== Médecin / Laboratoire : choix du patient ===== -->
+    <section class="card accent" data-view="doctor lab">
+      <h2>Patient concerné</h2>
+      <p class="lead">Collez l'adresse du patient. L'écriture et la lecture ne sont possibles que s'il vous a autorisé.</p>
+      <label class="field" style="margin-bottom:8px"><span>Adresse du patient</span>
+        <input type="text" id="recPatient" placeholder="0x…" autocomplete="off" spellcheck="false" /></label>
+      <div id="accessStatus" class="status wait">Entrez une adresse pour vérifier votre accès.</div>
+    </section>
+
+    <div class="cols" data-view="doctor lab">
+      <section class="card">
+        <h2>Nouvel enregistrement</h2>
+        <p class="lead">Le fichier est chiffré dans votre navigateur avant de partir.</p>
+        <div class="field">
+          <div class="seg">
+            <input type="radio" name="recType" id="typeCons" value="0" checked /><label for="typeCons">Consultation</label>
+            <input type="radio" name="recType" id="typeAna" value="1" /><label for="typeAna">Analyse</label>
+          </div>
+        </div>
+        <label class="field"><span>Titre</span>
+          <input type="text" id="recTitle" placeholder="Ex : Consultation cardiologie" /></label>
+        <label class="drop" id="drop">
+          <input type="file" id="recFile" />
+          <span id="dropText"><b>Choisir un fichier</b> ou le déposer ici</span>
+        </label>
+        <label class="field"><span>Mot de passe de chiffrement</span>
+          <input type="password" id="recPass" autocomplete="off" />
+          <small>À communiquer au patient : sans lui, personne ne peut ouvrir le fichier.</small></label>
+        <button id="addRec" class="btn wide">Chiffrer et enregistrer</button>
+        <ol class="steps" id="steps">
+          <li>Chiffrement</li><li>Stockage</li><li>Blockchain</li>
+        </ol>
+      </section>
+
+      <section class="card">
+        <h2>Dossier du patient</h2>
+        <p class="lead">Lecture autorisée seulement si le patient vous a donné accès.</p>
+        <button id="loadOther" class="btn ghost wide" style="margin-bottom:14px">Charger le dossier</button>
+        <label class="field"><span>Mot de passe de déchiffrement</span>
+          <input type="password" id="viewPassPro" autocomplete="off" /></label>
+        <div class="table-wrap"><table id="tblPro" class="hidden">
+          <thead><tr><th>Type</th><th>Titre</th><th>Date</th><th></th></tr></thead><tbody></tbody></table></div>
+        <div id="emptyPro" class="empty hidden">Aucun enregistrement.</div>
+      </section>
+    </div>
+
+    <!-- ===== Patient ===== -->
+    <div class="cols" data-view="patient">
+      <section class="card accent">
+        <h2>Autoriser un prestataire</h2>
+        <p class="lead">Il pourra ajouter des documents et lire votre dossier, pendant la durée choisie.</p>
+        <label class="field"><span>Médecin ou laboratoire</span>
+          <input type="text" id="grantAddr" list="providers" placeholder="0x… ou choisir dans la liste" autocomplete="off" spellcheck="false" />
+          <datalist id="providers"></datalist></label>
+        <label class="field"><span>Durée</span>
+          <select id="grantDur">
+            <option value="3600">1 heure</option>
+            <option value="86400">24 heures</option>
+            <option value="604800" selected>7 jours</option>
+            <option value="0">Sans limite</option>
+          </select></label>
+        <button id="grant" class="btn wide">Autoriser</button>
+      </section>
+
+      <section class="card">
+        <h2>Qui a accès à mon dossier</h2>
+        <p class="lead">Vous pouvez retirer un accès à tout moment.</p>
+        <ul id="grantList" class="list"></ul>
+      </section>
+    </div>
+
+    <section class="card" data-view="patient">
+      <h2>Mon dossier</h2>
+      <p class="lead">Seul vous (et les prestataires autorisés) pouvez lire cette liste.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom:14px">
+        <label class="field" style="flex:1; min-width:220px; margin:0"><span>Mot de passe de déchiffrement</span>
+          <input type="password" id="viewPass" autocomplete="off" /></label>
+        <button id="loadMine" class="btn">Charger mon dossier</button>
+      </div>
+      <div class="table-wrap"><table id="tblMine" class="hidden">
+        <thead><tr><th>Type</th><th>Titre</th><th>Auteur</th><th>Date</th><th>Empreinte</th><th></th></tr></thead><tbody></tbody></table></div>
+      <div id="emptyMine" class="empty hidden">Aucun enregistrement pour l'instant.</div>
+    </section>
+
+  </main>
+
+  <details class="activity">
+    <summary>Journal technique (pour la démo)</summary>
+    <pre id="log"></pre>
+  </details>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

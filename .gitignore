@@ -1,0 +1,19 @@
+# Secrets : NE JAMAIS publier
+.env
+*.env
+!.env.example
+
+# Dépendances et fichiers générés
+node_modules/
+artifacts/
+cache/
+coverage/
+typechain-types/
+
+# Fichiers chiffrés des patients (stockage local de démo)
+storage/
+
+# Divers
+.DS_Store
+Thumbs.db
+*.log
